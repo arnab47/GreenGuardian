@@ -83,4 +83,23 @@ public with sharing class GardenTriggerHandler {
             update taskListToUpdate;
         }
     }
+
+    public static void setManagerStartDate(List<Garden__c> newGardenList) {
+        for(Garden__c garden: newGardenList) {
+            if(garden.Manager__c != null) {
+                garden.Manager_Start_Date__c = Date.today();
+            }
+        }
+    }
+
+    public static void setManagerStartDate(List<Garden__c> oldGardenList, List<Garden__c> newGardenList) {
+        for(Integer i = 0; i < newGardenList.size(); i++) {
+            if(oldGardenList.get(i).Manager__c != null && newGardenList.get(i).Manager__c == null) {
+                newGardenList.get(i).Manager_Start_Date__c = null;
+            }
+            if(oldGardenList.get(i).Manager__c == null && newGardenList.get(i).Manager__c != null) {
+                newGardenList.get(i).Manager_Start_Date__c = Date.today();
+            }
+        }
+    }
 }

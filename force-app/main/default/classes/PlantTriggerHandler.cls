@@ -35,4 +35,50 @@ public with sharing class PlantTriggerHandler {
             }
         }
     }
+
+    public static void handleRollup(List<Plant__c> plantList, Map<Id, Plant__c> oldPlantMap) {
+        Set<Id> gardenIdsToUpdate = new Set<Id>();
+        
+        for(Plant__c plant : plantList) {
+            if(plant.Garden__c != null) {
+                gardenIdsToUpdate.add(plant.Garden__c);
+            }
+            
+            if(oldPlantMap != null) {
+                Plant__c oldPlant = oldPlantMap.get(plant.Id);
+                if(oldPlant.Garden__c != plant.Garden__c && oldPlant.Garden__c != null) {
+                    gardenIdsToUpdate.add(oldPlant.Garden__c);
+                }
+            }
+        }
+        
+        if(gardenIdsToUpdate.isEmpty()) {
+            return;
+        }
+        
+        Map<Id, Garden__c> gardensToUpdateMap = new Map<Id, Garden__c>();
+        for(Id gardenId : gardenIdsToUpdate) {
+            gardensToUpdateMap.put(gardenId, new Garden__c(Id = gardenId, Total_Plant_Count__c = 0));
+        }
+        
+        List<AggregateResult> groupedResults = [
+            SELECT Garden__c, COUNT(Id) plantCount 
+            FROM Plant__c 
+            WHERE Garden__c IN :gardenIdsToUpdate 
+            GROUP BY Garden__c
+        ];
+        
+        for(AggregateResult ar : groupedResults) {
+            Id gardenId = (Id) ar.get('Garden__c');
+            Integer count = (Integer) ar.get('plantCount');
+            
+            if(gardensToUpdateMap.containsKey(gardenId)) {
+                gardensToUpdateMap.get(gardenId).Total_Plant_Count__c = count;
+            }
+        }
+        
+        if(!gardensToUpdateMap.isEmpty()) {
+            update gardensToUpdateMap.values();
+        }
+    }
 }
