@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>Assigning_Garden_Records_Data</name>
+        <label>Assigning Garden Records Data</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.Status__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>StatusCheck</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.Maximum_Plant_Count__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>MaxPlantCountCheck</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.Minimum_Plant_Count__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>MinPlantCountCheck</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.Total_Plant_Count__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>TotalPlantCountCheck</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.Total_Unhealty_Plant_Count__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>TotalUnhealthyPlantCountCheck</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <environments>Default</environments>
+    <formulas>
+        <name>MaxPlantCountCheck</name>
+        <dataType>Number</dataType>
+        <expression>IF(ISBLANK({!$Record.Maximum_Plant_Count__c}), 100, {!$Record.Maximum_Plant_Count__c})</expression>
+        <scale>0</scale>
+    </formulas>
+    <formulas>
+        <name>MinPlantCountCheck</name>
+        <dataType>Number</dataType>
+        <expression>IF(ISBLANK({!$Record.Minimum_Plant_Count__c}), 0, {!$Record.Minimum_Plant_Count__c})</expression>
+        <scale>0</scale>
+    </formulas>
+    <formulas>
+        <name>StatusCheck</name>
+        <dataType>String</dataType>
+        <expression>IF(ISBLANK(TEXT({!$Record.Status__c})), &quot;Awaiting Resources&quot;, TEXT({!$Record.Status__c}))</expression>
+    </formulas>
+    <formulas>
+        <name>TotalPlantCountCheck</name>
+        <dataType>Number</dataType>
+        <expression>IF(ISBLANK({!$Record.Total_Plant_Count__c}), 0, {!$Record.Total_Plant_Count__c})</expression>
+        <scale>0</scale>
+    </formulas>
+    <formulas>
+        <name>TotalUnhealthyPlantCountCheck</name>
+        <dataType>Number</dataType>
+        <expression>IF(ISBLANK({!$Record.Total_Unhealty_Plant_Count__c}), 0, {!$Record.Total_Unhealty_Plant_Count__c})</expression>
+        <scale>0</scale>
+    </formulas>
+    <interviewLabel>Automatically Assign Default Records when Garden Record Is Created {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Automatically Assign Default Records when Garden Record Is Created</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Assigning_Garden_Records_Data</targetReference>
+        </connector>
+        <object>Garden__c</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>
