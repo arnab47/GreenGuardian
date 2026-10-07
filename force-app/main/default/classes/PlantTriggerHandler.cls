@@ -1,4 +1,4 @@
-public with sharing class GardenTriggerHandler {
+public with sharing class PlantTriggerHandler {
     public static void assignDefaultValues(List<Plant__c> plantList) {
         Set<Id> gardenIds = new Set<Id>();
         for(Plant__c plant: plantList) {
