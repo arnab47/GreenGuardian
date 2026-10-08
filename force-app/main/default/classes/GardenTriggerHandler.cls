@@ -128,4 +128,29 @@ public with sharing class GardenTriggerHandler {
             }
         }
     }
+    public static void calculateHealthIndex(List<Garden__c> oldGardenList, List<Garden__c> newGardenList) {
+        List<Garden__c> gardensToProcess = new List<Garden__c>();
+        if (oldGardenList == null) {
+            gardensToProcess.addAll(newGardenList);
+        } else {
+            for (Integer i = 0; i < newGardenList.size(); i++) {
+                Garden__c oldGarden = oldGardenList.get(i);
+                Garden__c newGarden = newGardenList.get(i);
+                
+                if (oldGarden.Total_Unhealty_Plant_Count__c != newGarden.Total_Unhealty_Plant_Count__c || 
+                    oldGarden.Total_Plant_Count__c != newGarden.Total_Plant_Count__c) {
+                    gardensToProcess.add(newGarden);
+                }
+            }
+        }
+        for (Garden__c garden : gardensToProcess) {
+            Decimal totalCount = garden.Total_Plant_Count__c != null ? garden.Total_Plant_Count__c : 0;
+            Decimal unhealthyCount = garden.Total_Unhealty_Plant_Count__c != null ? garden.Total_Unhealty_Plant_Count__c : 0;
+            if (totalCount == 0) {
+                garden.Health_Index__c = 0;
+            } else {
+                garden.Health_Index__c = ((totalCount - unhealthyCount) / totalCount) * 100;
+            }
+        }
+    }
 }
