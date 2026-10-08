@@ -128,6 +128,7 @@ public with sharing class GardenTriggerHandler {
             }
         }
     }
+    
     public static void calculateHealthIndex(List<Garden__c> oldGardenList, List<Garden__c> newGardenList) {
         List<Garden__c> gardensToProcess = new List<Garden__c>();
         if (oldGardenList == null) {
@@ -150,6 +151,28 @@ public with sharing class GardenTriggerHandler {
                 garden.Health_Index__c = 0;
             } else {
                 garden.Health_Index__c = ((totalCount - unhealthyCount) / totalCount) * 100;
+            }
+        }
+    }
+
+    public static void setGardenStatus(List<Garden__c> newGardenList, Map<Id, Garden__c> oldGardenMap) {
+        for(Garden__c garden: newGardenList) {
+            if(garden.Status__c == 'Permanent Closure') {
+                continue;
+            }
+            if(oldGardenMap != null && oldGardenMap.containsKey(garden.Id)) {
+                if(oldGardenMap.get(garden.Id).Status__c == 'Permanent Closure') {
+                    continue;
+                }
+            }
+            if(garden.Capacity__c == 0) {
+                garden.Status__c = 'Temporary Closure';
+            } else if(garden.Capacity__c > 100) {
+                garden.Status__c = 'Over Capacity';
+            } else if(garden.Capacity__c >= 70 && garden.Capacity__c <= 100 && garden.Minimum_Plant_Count__c <= garden.Total_Plant_Count__c && garden.Health_Index__c >= 70) {
+                garden.Status__c = 'Operational';
+            } else if((garden.Capacity__c > 0 && garden.Capacity__c < 70) || (garden.Health_Index__c < 70) || (garden.Minimum_Plant_Count__c > garden.Total_Plant_Count__c)) {
+                garden.Status__c = 'Awaiting Resources';
             }
         }
     }
