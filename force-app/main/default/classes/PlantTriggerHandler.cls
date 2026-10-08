@@ -81,4 +81,83 @@ public with sharing class PlantTriggerHandler {
             update gardensToUpdateMap.values();
         }
     }
+
+    public static void countUnhealthyPlantsForGarden(List<Plant__c> newPlantvalues, Map<Id, Plant__c> oldPlantValues) {
+        Set<Id> gardenIds = new Set<Id>();
+        
+        if (oldPlantValues == null && newPlantvalues != null) {
+            for (Plant__c plant : newPlantvalues) {
+                if (ifPlantUnhealthy(plant) && plant.Garden__c != null) {
+                    gardenIds.add(plant.Garden__c);
+                }
+            }
+        } else if (oldPlantValues != null && newPlantvalues == null) {
+            for (Plant__c plant : oldPlantValues.values()) {
+                if (ifPlantUnhealthy(plant) && plant.Garden__c != null) {
+                    gardenIds.add(plant.Garden__c);
+                }
+            }
+        } else if (oldPlantValues != null && newPlantvalues != null) {
+            for (Plant__c newPlant : newPlantvalues) {
+                Plant__c oldPlant = oldPlantValues.get(newPlant.Id);
+                
+                Boolean wasUnhealthy = ifPlantUnhealthy(oldPlant);
+                Boolean isUnhealthy = ifPlantUnhealthy(newPlant);
+                Boolean gardenChanged = newPlant.Garden__c != oldPlant.Garden__c;
+                
+                if (wasUnhealthy != isUnhealthy || (isUnhealthy && gardenChanged)) {
+                    if (newPlant.Garden__c != null) {
+                        gardenIds.add(newPlant.Garden__c);
+                    }
+                }
+                
+                if (wasUnhealthy && gardenChanged && oldPlant.Garden__c != null) {
+                    gardenIds.add(oldPlant.Garden__c);
+                }
+            }
+        } else {
+            return;
+        }
+
+        if (gardenIds.isEmpty()) {
+            return;
+        }
+
+        Map<Id, Garden__c> gardensToUpdateMap = new Map<Id, Garden__c>();
+        for (Id gId : gardenIds) {
+            gardensToUpdateMap.put(gId, new Garden__c(
+                Id = gId,
+                Total_Unhealty_Plant_Count__c = 0
+            ));
+        }
+
+        List<AggregateResult> groupedResults = [
+            SELECT Garden__c, COUNT(Id) unhealthyCount 
+            FROM Plant__c 
+            WHERE Garden__c IN :gardenIds 
+              AND Status__c IN ('Sick', 'Deceased', 'Wilting')
+            GROUP BY Garden__c
+        ];
+
+        for (AggregateResult ar : groupedResults) {
+            Id gardenId = (Id)ar.get('Garden__c');
+            Integer count = (Integer)ar.get('unhealthyCount');
+            
+            if (gardensToUpdateMap.containsKey(gardenId)) {
+                gardensToUpdateMap.get(gardenId).Total_Unhealty_Plant_Count__c = count;
+            }
+        }
+
+        if (!gardensToUpdateMap.isEmpty()) {
+            update gardensToUpdateMap.values();
+        }
+    }
+    
+    private static Boolean ifPlantUnhealthy(Plant__c plant) {
+        if (plant.Status__c == 'Sick' || plant.Status__c == 'Deceased' || plant.Status__c == 'Wilting') {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
