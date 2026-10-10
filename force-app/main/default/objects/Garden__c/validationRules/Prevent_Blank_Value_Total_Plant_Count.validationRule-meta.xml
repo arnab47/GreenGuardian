@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Prevent_Blank_Value_Total_Plant_Count</fullName>
+    <active>true</active>
+    <errorConditionFormula>(( Total_Plant_Count__c &gt; 0 ) &amp;&amp; ( ISBLANK( Maximum_Plant_Count__c ) ||  ISBLANK( Minimum_Plant_Count__c ) ))</errorConditionFormula>
+    <errorMessage>&quot;Maximum and Minimum Plant Count fields cannot be blank when there are plants in the Garden.</errorMessage>
+</ValidationRule>

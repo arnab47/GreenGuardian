@@ -16,6 +16,7 @@
     </types>
     <types>
         <members>Garden__c.Plant_Count_Fields_Must_Be_Non_Negative</members>
+        <members>Garden__c.Prevent_Blank_Value_Total_Plant_Count</members>
         <name>ValidationRule</name>
     </types>
     <version>67.0</version>
