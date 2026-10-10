@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>GardenTriggerHandler</members>
+        <members>PlantTriggerHandler</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>GardenTrigger</members>
+        <members>PlantTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>Automatically_Assign_Default_Records_when_Garden_Record_Is_Created</members>
+        <name>Flow</name>
+    </types>
+    <types>
+        <members>Garden__c.Plant_Count_Fields_Must_Be_Non_Negative</members>
+        <name>ValidationRule</name>
+    </types>
     <version>67.0</version>
 </Package>
-

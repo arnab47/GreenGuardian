@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Plant_Count_Fields_Must_Be_Non_Negative</fullName>
+    <active>true</active>
+    <errorConditionFormula>(Maximum_Plant_Count__c &lt; 0 ||  Minimum_Plant_Count__c &lt; 0 ||  Total_Plant_Count__c &lt; 0 ||  Total_Unhealty_Plant_Count__c &lt; 0)</errorConditionFormula>
+    <errorMessage>Plant Count fields must be greater than or equal to zero.</errorMessage>
+</ValidationRule>
