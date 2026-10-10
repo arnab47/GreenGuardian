@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Prevent_Plants_on_Closed_Gardens</fullName>
+    <active>true</active>
+    <errorConditionFormula>(
+    (ISNEW() || ISCHANGED(Garden__c)) &amp;&amp; 
+    (TEXT(Garden__r.Status__c) == &quot;Permanent Closure&quot;)
+)</errorConditionFormula>
+    <errorMessage>The Maximum Plant Count must be greater than or equal to the Minimum Plant Count.</errorMessage>
+</ValidationRule>
