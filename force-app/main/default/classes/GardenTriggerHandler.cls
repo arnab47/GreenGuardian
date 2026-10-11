@@ -1,8 +1,8 @@
 public with sharing class GardenTriggerHandler {
     public static void createManagerTaskOnInsert(List<Garden__c> gardenList) {
         List<Task> taskListToInsert = new List<Task>();
-        for(Garden__c garden : gardenList) {
-            if(garden.Manager__c != null) {
+        for (Garden__c garden : gardenList) {
+            if (garden.Manager__c != null) {
                 Task taskToInsert = new Task();
                 taskToInsert.WhatId = garden.Id;
                 taskToInsert.OwnerId = garden.Manager__c;
@@ -10,49 +10,54 @@ public with sharing class GardenTriggerHandler {
                 taskListToInsert.add(taskToInsert);
             }
         }
-        if(!taskListToInsert.isEmpty()) {
+        if (!taskListToInsert.isEmpty()) {
             insert taskListToInsert;
         }
     }
-    
+
     public static void transferManagerTaskOnCreateOrUpdateOrDelete(List<Garden__c> gardenOldValues, List<Garden__c> gardenNewValues) {
         List<Task> taskListToCreate = new List<Task>();
         List<Task> taskListToUpdate = new List<Task>();
-        
         List<Id> changedGardenIds = new List<Id>();
         List<Id> departingManagerIds = new List<Id>();
-        
         List<Id> deletedGardenIds = new List<Id>();
         Set<String> gardenManagerPairsToDelete = new Set<String>();
-        
-        for(Integer i = 0; i < gardenNewValues.size(); i++) {
+        for (Integer i = 0; i < gardenNewValues.size(); i++) {
             Garden__c oldGarden = gardenOldValues.get(i);
             Garden__c newGarden = gardenNewValues.get(i);
-            
-            if(oldGarden.Manager__c == null && newGarden.Manager__c != null) {
+            if (oldGarden.Manager__c == null && newGarden.Manager__c != null) {
                 Task taskToInsert = new Task();
                 taskToInsert.WhatId = newGarden.Id;
                 taskToInsert.OwnerId = newGarden.Manager__c;
                 taskToInsert.Subject = 'Acquire Plants';
+
                 taskListToCreate.add(taskToInsert);
             }
-            
-            if(oldGarden.Manager__c != null && newGarden.Manager__c != null && oldGarden.Manager__c != newGarden.Manager__c) {
+            if ( oldGarden.Manager__c != null && newGarden.Manager__c != null && oldGarden.Manager__c != newGarden.Manager__c) {
                 changedGardenIds.add(newGarden.Id);
                 departingManagerIds.add(oldGarden.Manager__c);
             }
-            
-            if(oldGarden.Manager__c != null && newGarden.Manager__c == null) {
+            if (oldGarden.Manager__c != null && newGarden.Manager__c == null) {
                 deletedGardenIds.add(newGarden.Id);
-                gardenManagerPairsToDelete.add(newGarden.Id + '-' + oldGarden.Manager__c);
+
+                gardenManagerPairsToDelete.add(
+                    newGarden.Id + '-' + oldGarden.Manager__c
+                );
             }
         }
-        if(!changedGardenIds.isEmpty()) {
-            List<Task> tasksToReassign = [SELECT Id, WhatId, OwnerId, Subject FROM Task WHERE WhatId IN :changedGardenIds AND OwnerId IN :departingManagerIds AND Subject = 'Acquire Plants' AND Status != 'Completed'];
-            for(Task taskItem: tasksToReassign) {
-                for(Integer i = 0; i < gardenNewValues.size(); i++) {
+        if (!changedGardenIds.isEmpty()) {
+            List<Task> tasksToReassign = [
+                SELECT Id, WhatId, OwnerId, Subject
+                FROM Task
+                WHERE WhatId IN :changedGardenIds
+                AND OwnerId IN :departingManagerIds
+                AND Subject = 'Acquire Plants'
+                AND Status != 'Completed'
+            ];
+            for (Task taskItem : tasksToReassign) {
+                for (Integer i = 0; i < gardenNewValues.size(); i++) {
                     Garden__c currentGarden = gardenNewValues.get(i);
-                    if(taskItem.WhatId == currentGarden.Id) {
+                    if (taskItem.WhatId == currentGarden.Id) {
                         taskItem.OwnerId = currentGarden.Manager__c;
                         taskListToUpdate.add(taskItem);
                         break;
@@ -60,75 +65,82 @@ public with sharing class GardenTriggerHandler {
                 }
             }
         }
-        
-        if(!deletedGardenIds.isEmpty()) {
-            List<Task> openTasksToCheck = [SELECT Id, WhatId, OwnerId FROM Task WHERE WhatId IN :deletedGardenIds AND Subject = 'Acquire Plants' AND Status != 'Completed'];
+
+        if (!deletedGardenIds.isEmpty()) {
+            List<Task> openTasksToCheck = [
+                SELECT Id, WhatId, OwnerId
+                FROM Task
+                WHERE WhatId IN :deletedGardenIds
+                AND Subject = 'Acquire Plants'
+                AND Status != 'Completed'
+            ];
             List<Task> tasksToDelete = new List<Task>();
-            for(Task taskItem : openTasksToCheck) {
-                String trackingKey = taskItem.WhatId + '-' + taskItem.OwnerId;
-                if(gardenManagerPairsToDelete.contains(trackingKey)) {
+            for (Task taskItem : openTasksToCheck) {
+
+                String trackingKey =
+                    taskItem.WhatId + '-' + taskItem.OwnerId;
+
+                if (gardenManagerPairsToDelete.contains(trackingKey)) {
                     tasksToDelete.add(taskItem);
                 }
             }
-            if(!tasksToDelete.isEmpty()) {
+            if (!tasksToDelete.isEmpty()) {
                 delete tasksToDelete;
             }
         }
-        
-        if(!taskListToCreate.isEmpty()) {
+        if (!taskListToCreate.isEmpty()) {
             insert taskListToCreate;
         }
-        
-        if(!taskListToUpdate.isEmpty()) {
+        if (!taskListToUpdate.isEmpty()) {
             update taskListToUpdate;
         }
     }
-    
+
     public static void setManagerStartDate(List<Garden__c> newGardenList) {
-        for(Garden__c garden: newGardenList) {
-            if(garden.Manager__c != null) {
+        for (Garden__c garden : newGardenList) {
+            if (garden.Manager__c != null) {
                 garden.Manager_Start_Date__c = Date.today();
             }
         }
     }
-    
+
     public static void setManagerStartDate(List<Garden__c> oldGardenList, List<Garden__c> newGardenList) {
-        for(Integer i = 0; i < newGardenList.size(); i++) {
-            if(oldGardenList.get(i).Manager__c != null && newGardenList.get(i).Manager__c == null) {
-                newGardenList.get(i).Manager_Start_Date__c = null;
+        for (Integer i = 0; i < newGardenList.size(); i++) {
+            Garden__c oldGarden = oldGardenList.get(i);
+            Garden__c newGarden = newGardenList.get(i);
+            if (oldGarden.Manager__c != null && newGarden.Manager__c == null) {
+                newGarden.Manager_Start_Date__c = null;
             }
-            if(oldGardenList.get(i).Manager__c == null && newGardenList.get(i).Manager__c != null) {
-                newGardenList.get(i).Manager_Start_Date__c = Date.today();
+            if (oldGarden.Manager__c == null && newGarden.Manager__c != null) {
+                newGarden.Manager_Start_Date__c = Date.today();
             }
         }
     }
-    
+
     public static void calculateCapacity(List<Garden__c> newGardenList, List<Garden__c> oldGardenList) {
-        if(oldGardenList == null) {
-            for(Garden__c garden: newGardenList) {
+        if (oldGardenList == null) {
+            for (Garden__c garden : newGardenList) {
                 if (garden.Maximum_Plant_Count__c == null || garden.Maximum_Plant_Count__c == 0 || garden.Total_Plant_Count__c == null || garden.Total_Plant_Count__c == 0) {
                     garden.Capacity__c = 0;
                 } else {
-                    garden.Capacity__c = ((Decimal)garden.Total_Plant_Count__c / garden.Maximum_Plant_Count__c) * 100;
+                    garden.Capacity__c = ((Decimal) garden.Total_Plant_Count__c / garden.Maximum_Plant_Count__c) * 100;
                 }
             }
         } else {
             for (Integer i = 0; i < newGardenList.size(); i++) {
                 Garden__c newGarden = newGardenList.get(i);
                 Garden__c oldGarden = oldGardenList.get(i);
-                if (newGarden.Total_Plant_Count__c != oldGarden.Total_Plant_Count__c ||
-                newGarden.Maximum_Plant_Count__c != oldGarden.Maximum_Plant_Count__c) {
-                    if (newGarden.Maximum_Plant_Count__c == null || newGarden.Maximum_Plant_Count__c == 0 ||
-                    newGarden.Total_Plant_Count__c == null || newGarden.Total_Plant_Count__c == 0) {
+                if (newGarden.Total_Plant_Count__c != oldGarden.Total_Plant_Count__c || newGarden.Maximum_Plant_Count__c != oldGarden.Maximum_Plant_Count__c) {
+                    if (newGarden.Maximum_Plant_Count__c == null || newGarden.Maximum_Plant_Count__c == 0 || newGarden.Total_Plant_Count__c == null || newGarden.Total_Plant_Count__c == 0) {
                         newGarden.Capacity__c = 0;
                     } else {
-                        newGarden.Capacity__c = ((Decimal)newGarden.Total_Plant_Count__c / newGarden.Maximum_Plant_Count__c) * 100;
+                        newGarden.Capacity__c = ((Decimal) newGarden.Total_Plant_Count__c /  newGarden.Maximum_Plant_Count__c) * 100;
                     }
                 }
             }
         }
     }
-    
+
     public static void calculateHealthIndex(List<Garden__c> oldGardenList, List<Garden__c> newGardenList) {
         List<Garden__c> gardensToProcess = new List<Garden__c>();
         if (oldGardenList == null) {
@@ -137,9 +149,7 @@ public with sharing class GardenTriggerHandler {
             for (Integer i = 0; i < newGardenList.size(); i++) {
                 Garden__c oldGarden = oldGardenList.get(i);
                 Garden__c newGarden = newGardenList.get(i);
-                
-                if (oldGarden.Total_Unhealty_Plant_Count__c != newGarden.Total_Unhealty_Plant_Count__c || 
-                    oldGarden.Total_Plant_Count__c != newGarden.Total_Plant_Count__c) {
+                if (oldGarden.Total_Unhealty_Plant_Count__c != newGarden.Total_Unhealty_Plant_Count__c || oldGarden.Total_Plant_Count__c != newGarden.Total_Plant_Count__c) {
                     gardensToProcess.add(newGarden);
                 }
             }
@@ -156,22 +166,22 @@ public with sharing class GardenTriggerHandler {
     }
 
     public static void setGardenStatus(List<Garden__c> newGardenList, Map<Id, Garden__c> oldGardenMap) {
-        for(Garden__c garden: newGardenList) {
-            if(garden.Status__c == 'Permanent Closure') {
+        for (Garden__c garden : newGardenList) {
+            if (garden.Status__c == 'Permanent Closure') {
                 continue;
             }
-            if(oldGardenMap != null && oldGardenMap.containsKey(garden.Id)) {
-                if(oldGardenMap.get(garden.Id).Status__c == 'Permanent Closure') {
+            if (oldGardenMap != null && oldGardenMap.containsKey(garden.Id)) {
+                if (oldGardenMap.get(garden.Id).Status__c == 'Permanent Closure') {
                     continue;
                 }
             }
-            if(garden.Capacity__c == 0) {
+            if (garden.Capacity__c == 0) {
                 garden.Status__c = 'Temporary Closure';
-            } else if(garden.Capacity__c > 100) {
+            } else if (garden.Capacity__c > 100) {
                 garden.Status__c = 'Over Capacity';
-            } else if(garden.Capacity__c >= 70 && garden.Capacity__c <= 100 && garden.Minimum_Plant_Count__c <= garden.Total_Plant_Count__c && garden.Health_Index__c >= 70) {
+            } else if (garden.Capacity__c >= 70 && garden.Capacity__c <= 100 && garden.Minimum_Plant_Count__c <= garden.Total_Plant_Count__c && garden.Health_Index__c >= 70) {
                 garden.Status__c = 'Operational';
-            } else if((garden.Capacity__c > 0 && garden.Capacity__c < 70) || (garden.Health_Index__c < 70) || (garden.Minimum_Plant_Count__c > garden.Total_Plant_Count__c)) {
+            } else if ((garden.Capacity__c > 0 && garden.Capacity__c < 70) || garden.Health_Index__c < 70 || garden.Minimum_Plant_Count__c > garden.Total_Plant_Count__c) {
                 garden.Status__c = 'Awaiting Resources';
             }
         }
